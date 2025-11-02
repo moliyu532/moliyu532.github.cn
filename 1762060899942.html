@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>爱心弹窗（完整爱心版）</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #f8f8f8;
+            height: 100vh;
+            position: relative;
+        }
+        .popup {
+            position: absolute;
+            width: 50px;   /* 更小巧，方便排列 */
+            height: 25px;
+            padding: 4px;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            font-family: "微软雅黑", sans-serif;
+            font-size: 9px; /* 适配小尺寸 */
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        const tips = ['我爱你'];
+        const bgColors = ['lightpink', 'skyblue', 'lightgreen', 'lavender', 'lightyellow'];
+
+        // 重新计算爱心坐标（适配手机全屏）
+        function generateHeartPoints() {
+            const screenW = window.innerWidth;
+            const screenH = window.innerHeight;
+            const popupW = 50;
+            const popupH = 25;
+            
+            const points = [];
+            // 增加点数到150，让爱心更饱满
+            for (let i = 0; i < 150; i++) {
+                const t = (i * 2 * Math.PI) / 150;
+                // 心形参数方程（放大原始坐标，方便缩放）
+                let x = 32 * Math.pow(Math.sin(t), 3);
+                let y = 26 * Math.cos(t) - 10 * Math.cos(2*t) - 4 * Math.cos(3*t) - 2 * Math.cos(4*t);
+                points.push({x, y});
+            }
+
+            // 缩放至手机屏幕的80%大小
+            const scale = Math.min(screenW * 0.8 / (Math.max(...points.map(p=>p.x)) - Math.min(...points.map(p=>p.x))), 
+                                  screenH * 0.8 / (Math.max(...points.map(p=>p.y)) - Math.min(...points.map(p=>p.y))));
+
+            // 居中到屏幕（垂直居中，不再上移）
+            const centerX = screenW / 2;
+            const centerY = screenH / 2;
+
+            // 计算每个弹窗的坐标（适配弹窗尺寸）
+            return points.map(p => ({
+                x: centerX + (p.x * scale) - (popupW / 2),
+                y: centerY - (p.y * scale) - (popupH / 2) // 反转y轴，让爱心正立
+            }));
+        }
+
+        function startPopups() {
+            const points = generateHeartPoints();
+            let idx = 0;
+            const interval = 100; // 加快显示速度，快速铺满爱心
+
+            function tick() {
+                if (idx >= points.length) return;
+                const {x, y} = points[idx];
+                const popup = document.createElement('div');
+                popup.className = 'popup';
+                popup.textContent = tips[0];
+                popup.style.backgroundColor = bgColors[Math.floor(Math.random() * bgColors.length)];
+                // 限制坐标在屏幕内
+                popup.style.left = `${Math.max(0, Math.min(x, window.innerWidth - 50))}px`;
+                popup.style.top = `${Math.max(0, Math.min(y, window.innerHeight - 25))}px`;
+                document.body.appendChild(popup);
+                idx++;
+                setTimeout(tick, interval);
+            }
+
+            tick();
+        }
+
+        window.addEventListener('load', startPopups);
+    </script>
+</body>
+</html>
